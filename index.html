@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern QR Code Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .qr-code-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            margin-top: 20px;
+        }
+
+        .show {
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .animated {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+
+    <div class="container animated">
+        <h1>Modern QR Code Generator</h1>
+        <form id="qrForm">
+            <label for="websiteUrl">Enter Website URL:</label>
+            <input type="text" id="websiteUrl" name="websiteUrl" placeholder="https://example.com"><br>
+            <button type="button" onclick="generateQR()">Generate QR Code</button>
+        </form>
+        <div class="qr-code-container" id="qrCode"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <script>
+        function generateQR() {
+            var websiteUrl = document.getElementById('websiteUrl').value;
+            var qrCodeDiv = document.getElementById('qrCode');
+
+            if (websiteUrl.trim() !== '') {
+                qrCodeDiv.innerHTML = '';
+
+                var typeNumber = 0;
+                var errorCorrectionLevel = 'L';
+                var qr = qrcode(typeNumber, errorCorrectionLevel);
+                qr.addData(websiteUrl);
+                qr.make();
+
+                var qrCodeImage = qr.createImgTag(5, 10);
+                qrCodeDiv.innerHTML = qrCodeImage;
+
+                qrCodeDiv.classList.add('show');
+            } else {
+                alert('Please enter a website URL.');
+            }
+        }
+
+        // Screen Arrow Tracker
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let x = canvas.width / 2;
+        let y = canvas.height / 2;
+        let lastX = x;
+        let lastY = y;
+        let circles = [];
+
+        function drawArrow(x, y) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw circles
+            circles.forEach(circle => {
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(76, 175, 80, ${circle.opacity})`;
+                ctx.fill();
+                circle.radius += 0.4; // Increase radius for animation
+                circle.opacity -= 0.02; // Reduce opacity for animation
+            });
+
+            // Remove faded out circles
+            circles = circles.filter(circle => circle.opacity > 0);
+        }
+
+        function update() {
+            if (x !== lastX || y !== lastY) {
+                // Add circle at current position if arrow is moving
+                circles.push({
+                    x: x,
+                    y: y,
+                    radius: 2, // Initial radius
+                    opacity: 1 // Initial opacity
+                });
+            }
+
+            drawArrow(x, y);
+
+            lastX = x;
+            lastY = y;
+        }
+
+        function loop() {
+            requestAnimationFrame(loop);
+            update();
+        }
+
+        function onMouseMove(event) {
+            x = event.clientX;
+            y = event.clientY;
+        }
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('mousemove', onMouseMove);
+
+        loop();
+    </script>
+</body>
+</html>
